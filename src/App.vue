@@ -1,4 +1,3 @@
-
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import {
@@ -16,10 +15,14 @@ import {
   CircleAlert,
   FileJson,
   ClipboardCheck,
+  Network,
 } from 'lucide-vue-next'
+import JsonTreeViewer from './components/JsonTreeViewer.vue'
 
-type Action = 'format' | 'minify' | 'validate'
+type Action = 'format' | 'minify' | 'validate' | 'tree'
 type ResultType = 'idle' | 'success' | 'error' | 'info'
+
+const outputMode = ref<'text' | 'tree'>('text')
 
 const sampleJson = `{
   "name": "JSONPilot",
@@ -28,7 +31,8 @@ const sampleJson = `{
   "features": [
     "Format JSON",
     "Minify JSON",
-    "Validate JSON"
+    "Validate JSON",
+    "Tree View"
   ],
   "openSource": true,
   "settings": {
@@ -44,9 +48,7 @@ const message = ref('')
 const lastAction = ref('')
 
 const lineCount = computed(() => {
-  return input.value.length === 0
-    ? 0
-    : input.value.split('\n').length
+  return input.value.length === 0 ? 0 : input.value.split('\n').length
 })
 
 const characterCount = computed(() => input.value.length)
@@ -77,20 +79,27 @@ function runAction(action: Action) {
 
     if (action === 'minify') {
       output.value = JSON.stringify(parsed)
+      outputMode.value = 'text'
       lastAction.value = 'Minified'
       message.value = 'JSON minified successfully.'
-    } else {
+    } else if (action === 'format') {
       output.value = JSON.stringify(parsed, null, 2)
-      lastAction.value = action === 'format' ? 'Formatted' : 'Validated'
-      message.value =
-        action === 'format'
-          ? 'JSON formatted successfully with 2-space indentation.'
-          : 'Your JSON syntax is valid.'
+      outputMode.value = 'text'
+      lastAction.value = 'Formatted'
+      message.value = 'JSON formatted successfully with 2-space indentation.'
+    } else if (action === 'validate') {
+      output.value = JSON.stringify(parsed, null, 2)
+      lastAction.value = 'Validated'
+      message.value = 'Your JSON syntax is valid.'
+    } else if (action === 'tree') {
+      output.value = JSON.stringify(parsed, null, 2)
+      outputMode.value = 'tree'
+      lastAction.value = 'Tree View'
+      message.value = 'JSON tree structure generated successfully.'
     }
 
     resultType.value = 'success'
   } catch (error: unknown) {
-    output.value = ''
     lastAction.value = ''
 
     const details =
@@ -98,20 +107,37 @@ function runAction(action: Action) {
 
     resultType.value = 'error'
     message.value = `Invalid JSON: ${details}`
+
+    if (action === 'tree') {
+      outputMode.value = 'tree'
+    }
+  }
+}
+
+function setOutputMode(mode: 'text' | 'tree') {
+  outputMode.value = mode
+  if (mode === 'tree' && !output.value && input.value.trim()) {
+    try {
+      const parsed: unknown = JSON.parse(input.value)
+      output.value = JSON.stringify(parsed, null, 2)
+    } catch {
+      // Let JsonTreeViewer handle and display error
+    }
   }
 }
 
 async function copyOutput() {
-  if (!output.value) {
+  const textToCopy = output.value || input.value
+  if (!textToCopy) {
     resultType.value = 'info'
-    message.value = 'There is no output to copy. Run a JSON operation first.'
+    message.value = 'There is no JSON to copy. Run an operation first.'
     return
   }
 
   try {
-    await navigator.clipboard.writeText(output.value)
+    await navigator.clipboard.writeText(textToCopy)
     resultType.value = 'success'
-    message.value = 'Output copied to your clipboard.'
+    message.value = 'JSON copied to your clipboard.'
   } catch {
     resultType.value = 'error'
     message.value =
@@ -123,9 +149,8 @@ function loadSample() {
   input.value = sampleJson
   output.value = ''
   lastAction.value = ''
-  resultType.value = 'idle'
-  message.value = 'Example JSON loaded. Choose an operation to begin.'
   resultType.value = 'info'
+  message.value = 'Example JSON loaded. Choose an operation to begin.'
 }
 
 function clearAll() {
@@ -194,11 +219,11 @@ function handleTab(event: KeyboardEvent) {
         <div class="eyebrow">Developer tools / JSON utilities</div>
 
         <h1 class="page-heading">
-          Your JSON workspace<span style="color: #38bdf8">.</span>
+          Your JSON workspace<span style="color: #94a3b8">.</span>
         </h1>
 
         <p class="page-description">
-          Format, validate, and minify JSON without sending your data
+          Format, validate, minify, and explore JSON in an interactive tree without sending your data
           to a server. Simple tools for your everyday workflow.
         </p>
       </section>
@@ -206,8 +231,8 @@ function handleTab(event: KeyboardEvent) {
       <section class="stats-grid" aria-label="Tool information">
         <article class="stat-card">
           <div class="stat-label">Available operations</div>
-          <div class="stat-value">03</div>
-          <div class="stat-subtitle">Format · Minify · Validate</div>
+          <div class="stat-value">04</div>
+          <div class="stat-subtitle">Format · Minify · Validate · Tree</div>
         </article>
 
         <article class="stat-card">
@@ -245,6 +270,7 @@ function handleTab(event: KeyboardEvent) {
           </div>
         </div>
 
+        <!-- Action Buttons Row -->
         <div class="button-row" style="padding: 14px 18px; border-bottom: 1px solid #202a39">
           <button
             class="btn btn-primary"
@@ -269,13 +295,24 @@ function handleTab(event: KeyboardEvent) {
             <CheckCircle2 :size="15" />
             Validate
           </button>
+
+          <!-- JsonTree Button right next to validate -->
+          <button
+            class="btn"
+            :class="{ 'btn-active': outputMode === 'tree' }"
+            @click="runAction('tree')"
+          >
+            <Network :size="15" />
+            Tree View
+          </button>
         </div>
 
         <div class="editor-grid">
+          <!-- Input Editor -->
           <section class="editor-panel">
             <div class="editor-toolbar">
               <div class="file-label">
-                <FileJson :size="16" color="#7dd3fc" />
+                <FileJson :size="16" color="#94a3b8" />
                 <span>Input</span>
                 <span class="file-extension">JSON</span>
               </div>
@@ -300,40 +337,78 @@ function handleTab(event: KeyboardEvent) {
             </div>
           </section>
 
+          <!-- Output Panel -->
           <section class="editor-panel">
             <div class="editor-toolbar">
               <div class="file-label">
                 <ClipboardCheck :size="16" color="#6ee7b7" />
                 <span>Output</span>
-                <span class="file-extension">RESULT</span>
+                <span class="file-extension">{{ outputMode === 'tree' ? 'TREE' : 'RESULT' }}</span>
               </div>
 
-              <button
-                class="btn"
-                :disabled="!output"
-                aria-label="Copy JSON output"
-                @click="copyOutput"
-              >
-                <Copy :size="14" />
-                Copy
-              </button>
+              <div class="toolbar-actions">
+                <!-- Mode switcher: Code / Tree -->
+                <div class="view-tabs" role="tablist" aria-label="Output view mode">
+                  <button
+                    class="view-tab"
+                    :class="{ active: outputMode === 'text' }"
+                    role="tab"
+                    :aria-selected="outputMode === 'text'"
+                    title="Code View"
+                    @click="setOutputMode('text')"
+                  >
+                    <Code2 :size="12" />
+                    <span>Code</span>
+                  </button>
+                  <button
+                    class="view-tab"
+                    :class="{ active: outputMode === 'tree' }"
+                    role="tab"
+                    :aria-selected="outputMode === 'tree'"
+                    title="Tree View"
+                    @click="setOutputMode('tree')"
+                  >
+                    <Network :size="12" />
+                    <span>Tree</span>
+                  </button>
+                </div>
+
+                <button
+                  class="btn"
+                  :disabled="!output && !input"
+                  aria-label="Copy JSON output"
+                  @click="copyOutput"
+                >
+                  <Copy :size="14" />
+                  Copy
+                </button>
+              </div>
             </div>
 
             <div class="editor-body">
-              <pre
-                v-if="output"
-                class="output-content"
-                aria-label="JSON output"
-              ><code>{{ output }}</code></pre>
+              <!-- Interactive Tree View Mode -->
+              <JsonTreeViewer
+                v-if="outputMode === 'tree'"
+                :json-text="input"
+              />
 
-              <div v-else class="output-empty">
-                <Braces :size="32" />
-                <strong>Nothing here yet</strong>
-                <p>
-                  Your processed JSON will appear here when you run
-                  an operation.
-                </p>
-              </div>
+              <!-- Standard Code / Formatted Output Mode -->
+              <template v-else>
+                <pre
+                  v-if="output"
+                  class="output-content"
+                  aria-label="JSON output"
+                ><code>{{ output }}</code></pre>
+
+                <div v-else class="output-empty">
+                  <Braces :size="32" />
+                  <strong>Nothing here yet</strong>
+                  <p>
+                    Your processed JSON will appear here when you run
+                    an operation.
+                  </p>
+                </div>
+              </template>
             </div>
           </section>
         </div>
@@ -383,7 +458,7 @@ function handleTab(event: KeyboardEvent) {
       <p class="tool-hint">
         <strong style="color: #a8b5c7">Quick tip:</strong>
         Press <kbd>Ctrl</kbd> + <kbd>Enter</kbd> to format JSON.
-        Use <kbd>Tab</kbd> in the editor to insert indentation.
+        Click <strong style="color: #cbd5e1">Tree View</strong> next to Validate to visualize nested nodes.
       </p>
     </main>
   </div>

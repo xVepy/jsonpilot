@@ -121,7 +121,7 @@ Avoid pasting secrets, API keys, passwords, or other sensitive information into 
 - [x] JSON validation
 - [x] JSON minification
 - [x] Copy output to clipboard
-- [ ] JSON Tree Viewer
+- [x] JSON Tree Viewer
 - [ ] JSON search and filtering
 - [ ] JSON comparison and diff
 - [ ] JSON to TypeScript conversion

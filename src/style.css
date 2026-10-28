@@ -35,20 +35,18 @@ button {
 
 button:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid #38bdf8;
+  outline: 2px solid #64748b;
   outline-offset: 3px;
 }
 
 ::selection {
-  background: #155e75;
-  color: #f0f9ff;
+  background: #334155;
+  color: #f8fafc;
 }
 
 .app-shell {
   min-height: 100vh;
-  background:
-    radial-gradient(ellipse at 55% -20%, #142238 0%, transparent 55%),
-    #090d14;
+  background: #090d14;
 }
 
 .topbar {
@@ -77,9 +75,9 @@ textarea:focus-visible {
   place-items: center;
   width: 36px;
   height: 36px;
-  color: #7dd3fc;
-  background: #102638;
-  border: 1px solid #20465c;
+  color: #cbd5e1;
+  background: #182232;
+  border: 1px solid #2d3b4e;
   border-radius: 10px;
 }
 
@@ -110,7 +108,6 @@ textarea:focus-visible {
   height: 7px;
   border-radius: 50%;
   background: #34d399;
-  box-shadow: 0 0 10px #34d39955;
 }
 
 .github-link {
@@ -129,7 +126,7 @@ textarea:focus-visible {
 }
 
 .eyebrow {
-  color: #7dd3fc;
+  color: #94a3b8;
   font-size: 11px;
   font-weight: 750;
   text-transform: uppercase;
@@ -214,8 +211,8 @@ textarea:focus-visible {
   place-items: center;
   width: 31px;
   height: 31px;
-  color: #7dd3fc;
-  background: #142739;
+  color: #cbd5e1;
+  background: #182232;
   border-radius: 8px;
 }
 
@@ -247,19 +244,73 @@ textarea:focus-visible {
 }
 
 .btn-primary {
-  background: #0284c7;
-  border-color: #0ea5e9;
-  color: white;
+  background: #334155;
+  border-color: #475569;
+  color: #f8fafc;
 }
 
 .btn-primary:hover {
-  background: #0369a1;
-  border-color: #38bdf8;
+  background: #475569;
+  border-color: #64748b;
 }
 
 .btn:disabled {
   cursor: not-allowed;
   opacity: 0.45;
+}
+
+.btn-active,
+.btn.active {
+  background: #242f3d;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+.btn-active:hover,
+.btn.active:hover {
+  background: #2d3b4d;
+  border-color: #64748b;
+  color: #f8fafc;
+}
+
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.view-tabs {
+  display: flex;
+  align-items: center;
+  background: #090e17;
+  border: 1px solid #1c2736;
+  border-radius: 6px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.view-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 0;
+  background: transparent;
+  color: #718096;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 140ms ease;
+}
+
+.view-tab:hover {
+  color: #cbd5e1;
+}
+
+.view-tab.active {
+  background: #242f3d;
+  color: #e2e8f0;
 }
 
 .editor-grid {
@@ -324,7 +375,7 @@ textarea:focus-visible {
   border: 0;
   outline: none;
   background: transparent;
-  color: #a5d6ff;
+  color: #e2e8f0;
   font-family: "SFMono-Regular", Consolas, "Liberation Mono",
     monospace;
   font-size: 13px;
@@ -335,7 +386,7 @@ textarea:focus-visible {
 }
 
 .code-editor:focus-visible {
-  outline: 1px solid #155e75;
+  outline: 1px solid #475569;
   outline-offset: -1px;
 }
 
@@ -402,8 +453,8 @@ textarea:focus-visible {
 }
 
 .result-message.info {
-  color: #93c5fd;
-  background: #101e31;
+  color: #cbd5e1;
+  background: #182230;
 }
 
 .panel-footer {
