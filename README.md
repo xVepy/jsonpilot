@@ -38,7 +38,7 @@ Make sure you have the following installed:
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/YOUR_USERNAME/jsonpilot.git
+   git clone https://github.com/xVepy/jsonpilot.git
    ```
 
 2. Navigate to the project directory:
