@@ -10,6 +10,7 @@ import {
   Layers,
 } from 'lucide-vue-next'
 import JsonTreeNode from './JsonTreeNode.vue'
+import { analyzeJson, type SmartJsonError } from '../utils/jsonErrorDetector'
 
 const props = defineProps<{
   jsonText: string
@@ -30,6 +31,7 @@ const parsed = computed(() => {
       valid: false,
       value: null,
       error: '',
+      diagnosis: null as SmartJsonError | null,
     }
   }
 
@@ -40,13 +42,16 @@ const parsed = computed(() => {
       valid: true,
       value: val,
       error: '',
+      diagnosis: null as SmartJsonError | null,
     }
-  } catch (error) {
+  } catch {
+    const diagnosis = analyzeJson(props.jsonText)
     return {
       empty: false,
       valid: false,
       value: null,
-      error: error instanceof Error ? error.message : 'Invalid JSON format',
+      error: diagnosis.message,
+      diagnosis,
     }
   }
 })
@@ -149,11 +154,14 @@ function clearSearch() {
       <div v-else-if="!parsed.valid" class="tree-error-state">
         <div class="error-badge">
           <CircleAlert :size="18" />
-          <span>Invalid JSON</span>
+          <span>{{ parsed.diagnosis?.title || 'Invalid JSON' }}</span>
+          <span v-if="parsed.diagnosis?.line" style="font-size: 11px; opacity: 0.85; font-family: monospace;">
+            (Line {{ parsed.diagnosis.line }}, Col {{ parsed.diagnosis.column }})
+          </span>
         </div>
-        <p class="error-desc">{{ parsed.error }}</p>
+        <p class="error-desc">{{ parsed.diagnosis?.suggestion || parsed.error }}</p>
         <span class="error-hint">
-          Check for missing commas, unclosed brackets, or invalid quotes in your JSON input.
+          Switch to Code view to inspect diagnostics or use Auto-Fix.
         </span>
       </div>
 

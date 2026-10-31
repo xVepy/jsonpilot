@@ -12,12 +12,13 @@ import {
   Copy,
   Trash2,
   RotateCcw,
-  CircleAlert,
   FileJson,
   ClipboardCheck,
   Network,
 } from 'lucide-vue-next'
 import JsonTreeViewer from './components/JsonTreeViewer.vue'
+import SmartErrorAlert from './components/SmartErrorAlert.vue'
+import { analyzeJson, autoFixJson, type SmartJsonError } from './utils/jsonErrorDetector'
 
 type Action = 'format' | 'minify' | 'validate' | 'tree'
 type ResultType = 'idle' | 'success' | 'error' | 'info'
@@ -46,6 +47,7 @@ const output = ref('')
 const resultType = ref<ResultType>('idle')
 const message = ref('')
 const lastAction = ref('')
+const smartError = ref<SmartJsonError | null>(null)
 
 const lineCount = computed(() => {
   return input.value.length === 0 ? 0 : input.value.split('\n').length
@@ -64,6 +66,7 @@ function resetStatus() {
   resultType.value = 'idle'
   message.value = ''
   lastAction.value = ''
+  smartError.value = null
 }
 
 function runAction(action: Action) {
@@ -71,11 +74,13 @@ function runAction(action: Action) {
     output.value = ''
     resultType.value = 'info'
     message.value = 'Enter some JSON or load the example to get started.'
+    smartError.value = null
     return
   }
 
   try {
     const parsed: unknown = JSON.parse(input.value)
+    smartError.value = null
 
     if (action === 'minify') {
       output.value = JSON.stringify(parsed)
@@ -99,18 +104,29 @@ function runAction(action: Action) {
     }
 
     resultType.value = 'success'
-  } catch (error: unknown) {
+  } catch (_error: unknown) {
     lastAction.value = ''
 
-    const details =
-      error instanceof Error ? error.message : 'Unknown parsing error'
+    const diagnosis = analyzeJson(input.value)
+    smartError.value = diagnosis
 
     resultType.value = 'error'
-    message.value = `Invalid JSON: ${details}`
+    message.value = diagnosis.title
+      ? `${diagnosis.title}: ${diagnosis.suggestion}`
+      : `Invalid JSON: ${diagnosis.message}`
 
     if (action === 'tree') {
       outputMode.value = 'tree'
     }
+  }
+}
+
+function handleAutoFix() {
+  const result = autoFixJson(input.value)
+  if (result.fixes.length > 0) {
+    input.value = result.fixed
+    runAction('format')
+    message.value = `Auto-fixed successfully (${result.fixes.join(', ')}). Formatted with 2-space indentation.`
   }
 }
 
@@ -149,6 +165,7 @@ function loadSample() {
   input.value = sampleJson
   output.value = ''
   lastAction.value = ''
+  smartError.value = null
   resultType.value = 'info'
   message.value = 'Example JSON loaded. Choose an operation to begin.'
 }
@@ -157,6 +174,7 @@ function clearAll() {
   input.value = ''
   output.value = ''
   lastAction.value = ''
+  smartError.value = null
   resultType.value = 'idle'
   message.value = ''
 }
@@ -204,7 +222,7 @@ function handleTab(event: KeyboardEvent) {
 
         <a
           class="github-link"
-          href="https://github.com"
+          href="https://github.com/xVepy/jsonpilot"
           target="_blank"
           rel="noreferrer"
         >
@@ -243,8 +261,8 @@ function handleTab(event: KeyboardEvent) {
 
         <article class="stat-card">
           <div class="stat-label">Current status</div>
-          <div class="stat-value">{{ resultLabel }}</div>
-          <div class="stat-subtitle">Based on your latest operation</div>
+          <div class="stat-value" :style="resultType === 'error' ? 'color: #f87171' : ''">{{ resultLabel }}</div>
+          <div class="stat-subtitle">{{ smartError && smartError.line ? `${smartError.title} (Line ${smartError.line})` : 'Based on your latest operation' }}</div>
         </article>
       </section>
 
@@ -413,8 +431,15 @@ function handleTab(event: KeyboardEvent) {
           </section>
         </div>
 
+        <!-- Smart Error Diagnostic Card -->
+        <SmartErrorAlert
+          v-if="resultType === 'error' && smartError"
+          :error="smartError"
+          @apply-fix="handleAutoFix"
+        />
+
         <div
-          v-if="message"
+          v-else-if="message"
           class="result-message"
           :class="resultType"
           role="status"
@@ -422,10 +447,6 @@ function handleTab(event: KeyboardEvent) {
         >
           <CheckCircle2
             v-if="resultType === 'success'"
-            :size="16"
-          />
-          <CircleAlert
-            v-else-if="resultType === 'error'"
             :size="16"
           />
           <Zap v-else :size="16" />

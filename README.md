@@ -8,6 +8,7 @@ JSONPilot is a web-based tool designed to help developers format, validate, and 
 
 - **Format JSON** — Beautify JSON data with proper indentation for better readability.
 - **Validate JSON** — Check whether JSON data is valid and display errors when parsing fails.
+- **Smart Error Detection & Auto-Fix** — Precise line & column detection, visual code snippet pointers, error categorization (trailing commas, single quotes, unquoted keys, comments, etc.), and 1-click auto-repair.
 - **Minify JSON** — Remove unnecessary whitespace to produce compact JSON output.
 - **Copy to Clipboard** — Copy processed JSON with a single click.
 - **Load Sample Data** — Quickly test the application using example JSON.
@@ -125,7 +126,8 @@ Avoid pasting secrets, API keys, passwords, or other sensitive information into 
 - [ ] JSON search and filtering
 - [ ] JSON comparison and diff
 - [ ] JSON to TypeScript conversion
-- [ ] Improved error messages with line and column information
+- [x] Improved error messages with line and column information
+- [x] Smart error detection with actionable suggestions and auto-fix
 - [ ] Light and dark theme support
 
 ## 🤝 Contributing

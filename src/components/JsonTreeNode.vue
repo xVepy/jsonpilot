@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import { computed, inject, ref, watch, type Ref } from 'vue'
+import { 
+  computed, 
+  inject, 
+  ref, 
+  watch, 
+  type Ref 
+} from 'vue'
 import {
   ChevronRight,
   Copy,
